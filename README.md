@@ -10,10 +10,12 @@ as MIT.
 
 * Simple to use!
 
+    ```php
     use VIPSoft\Unzip\Unzip;
-    ...
+
     $unzipper  = new Unzip();
     $filenames = $unzipper->extract($zipFilePath, $extractToThisDir);
+    ```
 
 * Guards against malicious filenames in the archive
 
