@@ -87,12 +87,9 @@ class Unzip
     private function extractFilenames(\ZipArchive $zipArchive)
     {
         $filenames = array();
+        $fileCount = $zipArchive->numFiles;
 
-        if (($count = $zipArchive->numFiles) === 0) {
-            return array();
-        }
-
-        for ($i = 0; $i < $count; $i++) {
+        for ($i = 0; $i < $fileCount; $i++) {
             if (($filename = $this->extractFilename($zipArchive, $i)) !== false) {
                 $filenames[] = $filename;
             }
