@@ -41,9 +41,9 @@ class UnzipTest extends \PHPUnit_Framework_TestCase
         $res = $unzip->extract($filename, $extractDir);
 
         $this->assertEquals(1, count($res));
-        $this->assertTrue(file_exists($extractDir . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/' . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/../../tests/' . $test . '.txt'));
+        $this->assertFileExists($extractDir . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/' . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/../../tests/' . $test . '.txt');
 
         unlink($extractDir . $test . '.txt');
     }
@@ -67,11 +67,11 @@ class UnzipTest extends \PHPUnit_Framework_TestCase
         }
 
         $this->assertFalse(isset($res));
-        $this->assertFalse(file_exists($extractDir . $test . '.txt'));
-        $this->assertFalse(file_exists($extractDir . '../' . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/' . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/../' . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/../../' . $test . '.txt'));
+        $this->assertFileNotExists($extractDir . $test . '.txt');
+        $this->assertFileNotExists($extractDir . '../' . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/' . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/../' . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/../../' . $test . '.txt');
     }
 
     /**
@@ -93,7 +93,7 @@ class UnzipTest extends \PHPUnit_Framework_TestCase
         }
 
         $this->assertFalse(isset($res));
-        $this->assertFalse(file_exists($extractDir . $test . '.txt'));
-        $this->assertFalse(file_exists(dirname(__FILE__) . '/' . $test . '.txt'));
+        $this->assertFileNotExists($extractDir . $test . '.txt');
+        $this->assertFileNotExists(dirname(__FILE__) . '/' . $test . '.txt');
     }
 }
