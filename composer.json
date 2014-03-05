@@ -13,7 +13,8 @@
         }
     ],
     "require": {
-        "php": ">=5.3.6"
+        "php": ">=5.3.6",
+        "ext-zip": "*"
     },
     "autoload": {
         "psr-0": { "VIPSoft\\Unzip": "src/" }
