@@ -52,7 +52,7 @@ class Unzip
      */
     private function fixPath($path)
     {
-        if (substr_compare($path, '/', -1)) {
+        if (substr($path, -1) === '/') {
             $path .= '/';
         }
 
