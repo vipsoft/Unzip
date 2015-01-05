@@ -157,7 +157,7 @@ class Unzip
             ? $this->statusStrings[$status]
             :'Unknown status';
 
-        return $statusString . '(' . $this->status . ')';
+        return $statusString . '(' . $status . ')';
     }
 
     /**
