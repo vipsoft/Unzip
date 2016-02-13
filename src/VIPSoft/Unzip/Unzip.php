@@ -181,6 +181,7 @@ class Unzip
         }
 
         $ziparchive->close();
+
         return $filenames;
     }
 }
