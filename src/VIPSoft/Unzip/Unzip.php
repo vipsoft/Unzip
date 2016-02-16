@@ -180,7 +180,7 @@ class Unzip
             throw new \Exception($this->getError($zipArchive->status));
         }
 
-        $ziparchive->close();
+        $zipArchive->close();
 
         return $filenames;
     }
