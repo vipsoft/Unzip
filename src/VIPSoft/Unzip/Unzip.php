@@ -16,7 +16,7 @@ class Unzip
     /**
      * @var array
      */
-    static $statusStrings = array(
+    private static $statusStrings = array(
         \ZipArchive::ER_OK => 'No error',
         \ZipArchive::ER_MULTIDISK => 'Multi-disk zip archives not supported',
         \ZipArchive::ER_RENAME => 'Renaming temporary file failed',
@@ -44,6 +44,39 @@ class Unzip
     );
 
     /**
+     * @var boolean
+     */
+    private $continueOnError;
+
+    /**
+     * Extract zip file to target path
+     *
+     * @param string  $zipFile         Path of .zip file
+     * @param string  $targetPath      Extract to this target (destination) path
+     * @param boolean $continueOnError Continue extracting files on error
+     *
+     * @return mixed Array of filenames corresponding to the extracted files
+     *
+     * @throw \Exception
+     */
+    public function extract($zipFile, $targetPath, $continueOnError = false)
+    {
+        $this->continueOnError = $continueOnError;
+
+        $zipArchive = $this->openZipFile($zipFile);
+        $targetPath = $this->fixPath($targetPath);
+        $filenames  = $this->extractFilenames($zipArchive);
+
+        if ($zipArchive->extractTo($targetPath, $filenames) === false) {
+            throw new \Exception($this->getStatusAsText($zipArchive->status));
+        }
+
+        $zipArchive->close();
+
+        return $filenames;
+    }
+
+    /**
      * Make sure target path ends in '/'
      *
      * @param string $path
@@ -65,13 +98,16 @@ class Unzip
      * @param string $zipFile
      *
      * @return \ZipArchive
+     *
+     * @throw \Exception
      */
     private function openZipFile($zipFile)
     {
         $zipArchive = new \ZipArchive;
+        $status = $zipArchive->open($zipFile);
 
-        if ($zipArchive->open($zipFile) !== true) {
-            throw new \Exception('Error opening '.$zipFile);
+        if ($status !== true) {
+            throw new \Exception($this->getStatusAsText($status) . ": $zipFile");
         }
 
         return $zipArchive;
@@ -90,7 +126,9 @@ class Unzip
         $fileCount = $zipArchive->numFiles;
 
         for ($i = 0; $i < $fileCount; $i++) {
-            if (($filename = $this->extractFilename($zipArchive, $i)) !== false) {
+            $filename = $this->extractFilename($zipArchive, $i);
+
+            if ($filename !== false) {
                 $filenames[] = $filename;
             }
         }
@@ -101,21 +139,22 @@ class Unzip
     /**
      * Test for valid filename path
      *
-     * The .zip file is untrusted input.  We check for absolute path (i.e., leading slash),
+     * The .zip file is untrusted input. We check for absolute path (i.e., leading slash),
      * possible directory traversal attack (i.e., '..'), and use of PHP wrappers (i.e., ':').
+     * Subclass and override this method at your own risk!
      *
      * @param string $path
      *
      * @return boolean
      */
-    private function isValidPath($path)
+    protected function isValidPath($path)
     {
         $pathParts = explode('/', $path);
 
-        if (!strncmp($path, '/', 1) ||
+        if (strncmp($path, '/', 1) === 0 ||
             array_search('..', $pathParts) !== false ||
-            strpos($path, ':') !== false)
-        {
+            strpos($path, ':') !== false
+        ) {
             return false;
         }
 
@@ -129,59 +168,44 @@ class Unzip
      * @param integer     $fileIndex  File index
      *
      * @return string
+     *
+     * @throw \Exception
      */
     private function extractFilename(\ZipArchive $zipArchive, $fileIndex)
     {
         $entry = $zipArchive->statIndex($fileIndex);
 
         // convert Windows directory separator to Unix style
-        $filename  = str_replace('\\', '/', $entry['name']);
+        $filename = str_replace('\\', '/', $entry['name']);
 
         if ($this->isValidPath($filename)) {
             return $filename;
         }
 
-        throw new \Exception('Invalid filename path in zip archive');
+        $statusText = "Invalid filename path in zip archive: $filename";
+
+        if ($this->continueOnError) {
+            trigger_error($statusText);
+
+            return false;
+        }
+
+        throw new \Exception($statusText);
     }
 
     /**
-     * Get error
+     * Get status as text string
      *
      * @param integer $status ZipArchive status
      *
      * @return string
      */
-    private function getError($status)
+    private function getStatusAsText($status)
     {
         $statusString = isset($this->statusStrings[$status])
             ? $this->statusStrings[$status]
-            :'Unknown status';
+            : 'Unknown status';
 
         return $statusString . '(' . $status . ')';
-    }
-
-    /**
-     * Extract zip file to target path
-     *
-     * @param string $zipFile    Path of .zip file
-     * @param string $targetPath Extract to this target (destination) path
-     *
-     * @return mixed Array of filenames corresponding to the extracted files
-     *
-     * @throw \Exception
-     */
-    public function extract($zipFile, $targetPath)
-    {
-        $zipArchive = $this->openZipFile($zipFile);
-        $targetPath = $this->fixPath($targetPath);
-        $filenames  = $this->extractFilenames($zipArchive);
-
-        if ($zipArchive->extractTo($targetPath, $filenames) === false) {
-            throw new \Exception($this->getError($zipArchive->status));
-        }
-
-        $zipArchive->close();
-
-        return $filenames;
     }
 }
